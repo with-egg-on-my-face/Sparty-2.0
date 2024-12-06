@@ -613,8 +613,8 @@ def main():
         parser.add_argument('-exploit', '--exploitation', action='store_true')
         parser.add_argument('-p', '--proxy', help="Specify proxy as http://user:password@host:port")
         parser.add_argument('-hds', '--headers', nargs='+', help="Specify headers as key=value pairs")
-        parser.add_argument('-dl', '--ntlm_login', nargs='+', help="Domain login")
-        parser.add_argument('-dp', '--ntlm_password', nargs='+', help="Domain password")
+        parser.add_argument('-dl', '--ntlm_login', help="Domain login")
+        parser.add_argument('-dp', '--ntlm_password', help="Domain password")
 
         args = parser.parse_args()
         if args.headers:
@@ -629,7 +629,7 @@ def main():
         custom_proxy = {"http": args.proxy, "https": args.proxy} if args.proxy else None
 
         if args.ntlm_login is not None and args.ntlm_password is not None:
-            s.auth = HttpNtlmAuth(args.ntlm_login, args.ntlm_password)
+            s.auth = HttpNtlmAuth(args.ntlm_login, args.ntlm_passwordq)
 
         target = args.url
         target_information(target)
