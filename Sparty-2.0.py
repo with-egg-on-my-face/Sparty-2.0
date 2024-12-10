@@ -188,7 +188,6 @@ def audit(target=[]):
 
 def dump_credentials(dest):
     print("")
-    global custom_proxy
     global s
 
     pwd_targets = []
@@ -199,7 +198,7 @@ def dump_credentials(dest):
 
     for entry in pwd_targets:
         try:
-            handle = s.get(entry, verify=False, proxies=custom_proxy)
+            handle = s.get(entry, verify=False)
             if handle.status_code == 200:
                 print("[+] Dumping contents of file located at : (%s)" % (entry))
                 filename = "__dump__.txt"
@@ -227,7 +226,6 @@ def dump_credentials(dest):
 
 def fingerprint_frontpage(name):
     print("")
-    global custom_proxy
     global s
 
     enum_nix = ['_vti_bin/_vti_aut/author.exe', '_vti_bin/_vti_adm/admin.exe', '_vti_bin/shtml.exe']
@@ -241,7 +239,7 @@ def fingerprint_frontpage(name):
 
     for entry in build_enum_nix:
         try:
-            info = s.get(entry, verify=False, proxies=custom_proxy)
+            info = s.get(entry, verify=False)
             if info.status_code == 200:
                 print("[+] Front page is tested as : nix version |  (%s) | (%d)" % (entry, info.status_code))
                 print("")
@@ -254,7 +252,7 @@ def fingerprint_frontpage(name):
 
     for entry in build_enum_win:
         try:
-            info = s.get(entry, verify=False, proxies=custom_proxy)
+            info = s.get(entry, verify=False)
             if info.status_code == 200:
                 print("[+] Front page is tested as : windows version |  (%s) | (%d)" % (entry, info.status_code))
                 print("")
@@ -264,7 +262,7 @@ def fingerprint_frontpage(name):
 
     frontend_version = name + "/_vti_inf.html"
     try:
-        version = s.get(frontend_version, verify=False, proxies=custom_proxy)
+        version = s.get(frontend_version, verify=False)
         version_content = version.content.decode('utf-8')
         print("[+] Extracting frontpage version from default file : (%s):" % re.findall(r'FPVersion=(.*)',
                                                                                         version_content))
@@ -286,24 +284,22 @@ def fingerprint_frontpage(name):
 
 def dump_sharepoint_headers(name):
     print("")
-    global custom_headers
-    global custom_proxy
     global s 
 
     try:
-        dump_s = s.get(name, verify=False, headers=custom_headers, proxies=custom_proxy)
+        dump_s = s.get(name, verify=False)
         print("[+] Configured sharepoint version is  : (%s)" % dump_s.headers['microsoftsharepointteamservices'])
     except KeyError:
         print("[-] Sharepoint version could not be extracted using HTTP header :  MicrosoftSharepointTeamServices ")
     try:
-        dump_f = s.get(name, verify=False, headers=custom_headers, proxies=custom_proxy)
+        dump_f = s.get(name, verify=False)
         print("[+] Sharepoint is configured with load balancing capability : (%s)" % dump_f.headers[
             'x-sharepointhealthscore'])
     except KeyError:
         print(
             "[-] Sharepoint load balancing ability could not be determined using HTTP header : X-SharepointHealthScore ")
     try:
-        dump_g = s.get(name, verify=False, headers=custom_headers, proxies=custom_proxy)
+        dump_g = s.get(name, verify=False)
         print("[+] Sharepoint is configured with explicit diagnosis (GUID based log analysis) purposes : (%s)" %
               dump_g.headers['sprequestguid'])
     except KeyError:
@@ -320,8 +316,6 @@ def dump_sharepoint_headers(name):
 
 def frontpage_rpc_check(name):
     print("")
-    global custom_proxy
-    global custom_headers
     global s 
 
     local_headers = {
@@ -343,7 +337,7 @@ def frontpage_rpc_check(name):
 
     print("[+] Sending HTTP GET request to - (%s) for verifying whether RPC is listening " % destination)
     try:
-        response = s.get(destination, verify=False, headers=local_headers, proxies=custom_proxy)
+        response = s.get(destination, verify=False, headers=local_headers)
         if response.status_code == 200:
             print("[+] Target is listening on frontpage RPC - (%s)" % response.status_code)
         else:
@@ -360,7 +354,7 @@ def frontpage_rpc_check(name):
     print("")
     print("[+] Sending HTTP POST request to retrieve software version - (%s)" % destination)
     try:
-        response = s.post(destination, json=data, headers=local_headers, verify=False, proxies=custom_proxy)
+        response = s.post(destination, json=data, headers=local_headers, verify=False)
         if response.status_code == 200:
             print("[+] Target accepts the request - (%s) | (%s) !\n" % (response.status_code))
             filename = "__version__.txt" + ".html"
@@ -386,8 +380,6 @@ def frontpage_rpc_check(name):
 
 def frontpage_service_listing(name):
     print("")
-    global custom_proxy
-    global custom_headers
     global s 
 
     local_headers = {
@@ -416,7 +408,7 @@ def frontpage_service_listing(name):
 
         for entry in data:
 
-            response = s.post(destination, json=data, headers=local_headers, verify=False, proxies=custom_proxy)
+            response = s.post(destination, json=data, headers=local_headers, verify=False)
             if response.status_code == 200:
                 print("[+] Target Accepts the request - (%s)" % (entry.split('&')[0], response.status_code))
                 i += 1
@@ -443,8 +435,6 @@ def frontpage_service_listing(name):
 
 def frontpage_config_check(name):
     print("")
-    global custom_proxy
-    global custom_headers
     global s 
 
     local_headers = {
@@ -481,7 +471,7 @@ def frontpage_config_check(name):
     print("")
     for item in payloads:
         try:
-            response = s.post(destination, json=item, headers=local_headers, verify=False, proxies=custom_proxy)
+            response = s.post(destination, json=item, headers=local_headers, verify=False)
             if response.status_code == 200:
                 print("[+] target accepts the request -  [%s] | (%s)" % (item.split('&')[0], response.status_code))
                 filename = "__author-dll-config__" + ".html"
@@ -508,8 +498,6 @@ def frontpage_config_check(name):
 
 def frontpage_remove_folder(name):
     print("")
-    global custom_proxy
-    global custom_headers
     global s 
 
     local_headers = {
@@ -537,7 +525,7 @@ def frontpage_remove_folder(name):
 
         try:
 
-            response = s.post(destination, json=item, headers=local_headers, verify=False, proxies=custom_proxy)
+            response = s.post(destination, json=item, headers=local_headers, verify=False)
             if response.status_code == 200:
                 print("[+] Folder removed successfully - [%s] | (%s)  " % (item.split('&')[0], response.status_code))
 
@@ -561,8 +549,6 @@ def frontpage_remove_folder(name):
 
 def file_upload_check(name):
     print("")
-    global custom_proxy
-    global custom_headers
     global s 
 
     local_headers = {
@@ -590,7 +576,7 @@ def file_upload_check(name):
     print("")
     for item in payloads:
         try:
-            response = s.post(destination, json=item, headers=local_headers, verify=False, proxies=custom_proxy)
+            response = s.post(destination, json=item, headers=local_headers, verify=False)
             if response.status_code == 200:
                 # TODO: fix items splitting
                 print("[+] File uploaded successfully - [%s] | (%s) \n" % (items.split('&')[0], response.status_code))
@@ -639,7 +625,9 @@ def main():
                     sys.exit(1)
             s.headers = custom_headers
 
-        custom_proxy = {"http": args.proxy, "https": args.proxy} if args.proxy else None
+        if args.proxy is not None:
+            custom_proxy = {"http": args.proxy, "https": args.proxy} 
+            s.proxies.update(custom_proxy)
 
         if args.ntlm_login is not None and args.ntlm_password is not None:
             s.auth = HttpNtlmAuth(args.ntlm_login, args.ntlm_password)
