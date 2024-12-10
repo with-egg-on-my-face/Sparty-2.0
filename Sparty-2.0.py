@@ -661,14 +661,14 @@ def main():
             print("")
             print("")
             print(f"{GREEN}    [*] Dumping Files if Possible! {RESET}")
-            dump_credentials(target)
+            dump_credentials(target,s)
             print(f"{GREEN}   [*] Trying to Remove Folder From Server{RESET}")
 
-            frontpage_remove_folder(target)
+            frontpage_remove_folder(target,s)
             print(f"{GREEN}   [*] Auditing File Uploading Misconfiguration {RESET}")
-            file_upload_check(target)
+            file_upload_check(target,s)
             print(f"{GREEN}   [*] Dumping Sharepoint Headers {RESET}")
-            dump_sharepoint_headers(target)
+            dump_sharepoint_headers(target,s)
 
         if args.exploitation == False and args.enumeration == False:
             print(f"{RED}  [!!] No Module Used  {RESET}")
