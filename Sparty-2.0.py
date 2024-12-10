@@ -87,12 +87,6 @@ RED = colorama.Fore.RED
 BLUE = colorama.Fore.BLUE
 CYAN = colorama.Fore.CYAN
 
-# Custom headers
-custom_headers = {}
-# Proxy
-custom_proxy = {}
-# Session
-s = requests.Session()
 
 def banner():
     ascii_banner = rf"""{RED}
@@ -128,12 +122,11 @@ def sparty_usage(destination):
     print("\t\t: (3) do not specify '/' at the end of url !")
 
 
-def target_information(name):
+def target_information(name, s):
     print("")
     print(f"{GREEN} [*] TARGET INFORMATION {RESET}")
     print("")
     try:
-        global s
 
         local_headers = {
             'MIME-Version': '4.0',
@@ -146,7 +139,7 @@ def target_information(name):
         session_headers = s.headers.copy()
         session_headers.update(local_headers) 
 
-        headers = s.get(name, verify=False, headers=local_headers,proxies=custom_proxy)
+        headers = s.get(name, verify=False, headers=local_headers)
         print("[+] Fetching information from the given target --> [%s]" % (headers.url))
         print("[+] Target responded with HTTP code --> [%s]" % headers.status_code)
         print("[+] Target is running server --> [%s]" % headers.headers['server'])
@@ -164,13 +157,12 @@ def build_target(target, front_dirs=[], refine_target=[]):
         refine_target.append(target + "/" + item)
 
 
-def audit(target=[]):
-    global s
+def audit(target=[], s=None):
 
     print("")
     for element in target:
         try:
-            handle = s.get(element, verify=False, proxies=custom_proxy)
+            handle = s.get(element, verify=False)
             response_code = handle.status_code
             print("[+] (%s) - (%d)" % (element, response_code))
 
@@ -186,9 +178,8 @@ def audit(target=[]):
     print("")
 
 
-def dump_credentials(dest):
+def dump_credentials(dest, s):
     print("")
-    global s
 
     pwd_targets = []
     pwd_files = ['_vti_pvt/service.pwd', '_vti_pvt/administrators.pwd', '_vti_pvt/authors.pwd']
@@ -224,9 +215,8 @@ def dump_credentials(dest):
     print("")
 
 
-def fingerprint_frontpage(name):
+def fingerprint_frontpage(name, s):
     print("")
-    global s
 
     enum_nix = ['_vti_bin/_vti_aut/author.exe', '_vti_bin/_vti_adm/admin.exe', '_vti_bin/shtml.exe']
     enum_win = ['_vti_bin/_vti_aut/author.dll', '_vti_bin/_vti_aut/dvwssr.dll', '_vti_bin/_vti_adm/admin.dll',
@@ -282,9 +272,8 @@ def fingerprint_frontpage(name):
     print("")
 
 
-def dump_sharepoint_headers(name):
+def dump_sharepoint_headers(name, s):
     print("")
-    global s 
 
     try:
         dump_s = s.get(name, verify=False)
@@ -314,9 +303,8 @@ def dump_sharepoint_headers(name):
         pass
 
 
-def frontpage_rpc_check(name):
+def frontpage_rpc_check(name, s):
     print("")
-    global s 
 
     local_headers = {
         'MIME-Version': '4.0',
@@ -378,9 +366,8 @@ def frontpage_rpc_check(name):
         pass
 
 
-def frontpage_service_listing(name):
+def frontpage_service_listing(name, s):
     print("")
-    global s 
 
     local_headers = {
         'MIME-Version': '4.0',
@@ -433,9 +420,8 @@ def frontpage_service_listing(name):
         pass
 
 
-def frontpage_config_check(name):
+def frontpage_config_check(name, s):
     print("")
-    global s 
 
     local_headers = {
         'MIME-Version': '4.0',
@@ -496,9 +482,8 @@ def frontpage_config_check(name):
     print("")
 
 
-def frontpage_remove_folder(name):
+def frontpage_remove_folder(name, s):
     print("")
-    global s 
 
     local_headers = {
         'MIME-Version': '4.0',
@@ -547,9 +532,8 @@ def frontpage_remove_folder(name):
     print("")
 
 
-def file_upload_check(name):
+def file_upload_check(name, s):
     print("")
-    global s 
 
     local_headers = {
         'MIME-Version': '4.0',
@@ -601,9 +585,13 @@ def file_upload_check(name):
 def main():
     try:
         import argparse
-        global custom_headers
-        global custom_proxy
-        global s 
+
+        # Custom headers
+        custom_headers = {}
+        # Proxy
+        custom_proxy = {}
+        # Session
+        s = requests.Session()
 
         parser = argparse.ArgumentParser(description="SPARTY : Sharepoint/Frontpage Security Auditing Tool")
         parser.add_argument("-u", "--url", help="Target URL", required=True)
@@ -633,38 +621,38 @@ def main():
             s.auth = HttpNtlmAuth(args.ntlm_login, args.ntlm_password)
 
         target = args.url
-        target_information(target)
+        target_information(target, s)
         if args.enumeration:
             print("")
             print(f"{BLUE}              [!!] Using Enumeration Module [!!] {RESET}")
             print("")
             print("")
             print(f"{GREEN}   [*] Auditing Frontpage RPC service {RESET}")
-            frontpage_rpc_check(target)
+            frontpage_rpc_check(target, s)
             print(f"{GREEN}   [*] Auditing Frontpage RPC For Service Listing {RESET}")
-            frontpage_service_listing(target)
+            frontpage_service_listing(target, s)
             print(f"{GREEN}   [*] Auditing Frontpage Configuration Setting{RESET}")
-            frontpage_config_check(target)
+            frontpage_config_check(target,s)
             build_target(target, directory_check, dir_target)
             print(f"{GREEN}   [*] Auditing Frontpage Directory Permissions{RESET}")
-            audit(dir_target)
+            audit(dir_target, s)
             build_target(target, front_bin, refine_target)
             print(f"{GREEN}   [*] Auditing Frontpage For Sensitive Information{RESET}")
-            audit(refine_target)
+            audit(refine_target, s)
             build_target(target, front_pvt, pvt_target)
             print(f"{GREEN}   [*] Auditing  '/_vti_pvt/' Directory for Sensitive Information{RESET}")
-            audit(pvt_target)
-            fingerprint_frontpage(target)
+            audit(pvt_target, s)
+            fingerprint_frontpage(target, s)
             build_target(target, sharepoint_check_layout, sharepoint_target_layout)
             print(f"{GREEN}   [*] Auditing Sharepoint Directories for Sensitive Information{RESET}")
-            audit(sharepoint_target_layout)
+            audit(sharepoint_target_layout, s)
             build_target(target, sharepoint_check_forms, sharepoint_target_forms)
-            audit(sharepoint_target_forms)
+            audit(sharepoint_target_forms, s)
             build_target(target, sharepoint_check_catalog, sharepoint_target_catalog)
-            audit(sharepoint_target_catalog)
+            audit(sharepoint_target_catalog, s)
             build_target(target, front_services, refine_target)
             print(f"{GREEN}   [*] Checking Exposed Services in the Frontpage/Sharepoint  Directory{RESET}")
-            audit(refine_target)
+            audit(refine_target, s)
 
         if args.exploitation:
             print("")
