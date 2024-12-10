@@ -26,6 +26,7 @@ Installation on Linux.
 ## How it Works
 This Tool uses 2 modules to Audit  SharePoint, `Exploitation  ` and `Enumeration`
 You can use one or both of them at once. `python Sparty-2.0 -u https://example.com -enum -exploit `
+If NTLM authentication is required use these options `--ntlm_login` and `--ntlm_password` 
 
 > Enumeration Module
 
@@ -64,6 +65,8 @@ url           | url           | A URL to scan
 -h            | --help        | Displays help 
 -p           | --proxy        | Specify a proxy (ex: http://localhost:8080) 
 -hds            | --headers        | Specify a custom header (ex: 'Authorization=Basic: YOURTOKEN')
+-dl           |--ntlm_login | Domain login
+-dp           |--ntlm_password| Domain password
 
 
 ### Note
